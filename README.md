@@ -1,4 +1,4 @@
-Ruby Command Line Hangman - The Odin project
+# Ruby Command Line Hangman - The Odin project
 
 A simple OOP Hangman game.
 
