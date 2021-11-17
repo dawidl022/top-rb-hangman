@@ -1,15 +1,39 @@
 require 'set'
 
-def puts_blank_line
+def put_blank_line
   puts
+end
+
+module Validatable
+  def input_option(message, options)
+    valid_input = nil
+    user_input = nil
+
+    until valid_input
+      if user_input
+        puts "Invalid input. Please input one of the following:"
+        puts "#{options.map { |option| "#{option.to_s}" }}"
+        put_blank_line
+      end
+
+      print message
+      user_input = gets.chomp.downcase.to_sym
+      valid_input = user_input if options.include?(user_input)
+    end
+
+    valid_input
+  end
 end
 
 class Menu
   DEFAULT_WORD_FILE = "5desk.txt"
 
+  include Validatable
+
   def initialize(word_file, turns = 8, save_location = "save")
     @words = load_words(word_file || DEFAULT_WORD_FILE)
     @player = Player.new
+    @save_location = save_location
     @game = Hangman.new(@player, @words, turns, save_location)
   end
 
@@ -17,6 +41,26 @@ class Menu
 
   def start
     puts logo
+    main_menu
+  end
+
+  def main_menu
+    options = [:new]
+
+    if File.exist?(@save_location)
+      options << :load
+    end
+
+    display_options = options.map { |option| "[#{option.to_s.capitalize}]" }
+    puts display_options
+    put_blank_line
+
+    case input_option("", options)
+    when :new then nil
+    when :load then load_game
+    else raise "Invalid argument"
+    end
+
     @game.play_game
   end
 
@@ -39,7 +83,11 @@ class Menu
   end
 
   def load_words(file)
-    File.readlines(file)
+    File.readlines(file, chomp: true)
+  end
+
+  def load_game
+    @game = Marshal.load(File.read(@save_location))
   end
 
 end
@@ -74,7 +122,7 @@ class Hangman
         @turns_left -= 1
         @incorrect_letters << letter
       end
-      puts_blank_line
+      put_blank_line
     end
 
 
